@@ -129,7 +129,7 @@ Function(ObjectT* pCallableObject, ReturnT(ObjectT::*pCallable)(ArgumentsP...))
 template <typename FunctionT>
 class Delegate;
 
-// hides methods and static functions how this type(TYPE EREASURE)
+// hides methods and static functions like this type(TYPE EREASURE)
 template <typename ReturnT, typename... ArgumentsP>
 class Delegate<ReturnT(ArgumentsP...)>
 {
