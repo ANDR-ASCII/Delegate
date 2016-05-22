@@ -1,4 +1,5 @@
 #include <iostream>
+#include "Delegate.hpp"
 
 void test_func1()
 {
