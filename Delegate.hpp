@@ -20,7 +20,7 @@ struct BaseFunctionWrapper<ReturnT(ArgumentsP...)>
 
     virtual ~BaseFunctionWrapper() = default;
     virtual bool Compare(BaseT* pComparable) = 0;
-    virtual ReturnT Invoke(ArgumentsP&&... pack) const = 0;
+    virtual ReturnT Invoke(ArgumentsP&&... pack) = 0;
 };
 
 /** ***************************** WRAPPERS *************************************/
@@ -44,7 +44,7 @@ public:
         callable_(pCallback) { }
 
     // invoke virtual function
-    ReturnT Invoke(ArgumentsP&&... pack) const override
+    ReturnT Invoke(ArgumentsP&&... pack) override
     {
         callable_(std::forward<ArgumentsP>(pack)...);
     }
@@ -80,21 +80,20 @@ public:
     using BaseT = BaseFunctionWrapper<ReturnT(ArgumentsP...)>;
     using ThisT = MemberFunctionWrapper;
 
-    MemberFunctionWrapper(ObjectT* callableObject, PointerToCallback pCallback):
+    MemberFunctionWrapper(ObjectT const& callableObject, PointerToCallback pCallback):
         callableObject_(callableObject), callableMethod_(pCallback) { }
 
     // invoke virtual function
-    ReturnT Invoke(ArgumentsP&&... pack) const override
+    ReturnT Invoke(ArgumentsP&&... pack) override
     {
-        (callableObject_->*callableMethod_)(std::forward<ArgumentsP>(pack)...);
+        (callableObject_.*callableMethod_)(std::forward<ArgumentsP>(pack)...);
     }
 
     bool Compare(BaseT* pComparable) override
     {
         if(auto pMemberWrap = dynamic_cast<ThisT*>(pComparable))
         {
-            if(callableMethod_ == pMemberWrap->callableMethod_ &&
-               callableObject_ == pMemberWrap->callableObject_)
+            if(callableMethod_ == pMemberWrap->callableMethod_)
             {
                 return true;
             }
@@ -104,7 +103,7 @@ public:
     }
 
 private:
-    ObjectT* callableObject_;
+    ObjectT callableObject_;
     PointerToCallback callableMethod_;
 };
 
@@ -119,7 +118,7 @@ Function(ReturnT(*pCallable)(ArgumentsP...))
 
 template <typename ObjectT, typename ReturnT, typename... ArgumentsP>
 typename std::shared_ptr<BaseFunctionWrapper<ReturnT(ArgumentsP...)>>
-Function(ObjectT* pCallableObject, ReturnT(ObjectT::*pCallable)(ArgumentsP...))
+Function(ObjectT const& pCallableObject, ReturnT(ObjectT::*pCallable)(ArgumentsP...))
 {
     return std::make_shared<MemberFunctionWrapper<ObjectT, ReturnT(ObjectT::*)(ArgumentsP...)>>
                                 (pCallableObject, pCallable);
